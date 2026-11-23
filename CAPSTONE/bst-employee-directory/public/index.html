@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Employee Directory – BST</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f6f7f9;--card:#fff;--tx:#1b1f27;--mu:#5d6675;--bd:#d9dde4;--ac:#1d5fd6;--act:#fff;--hl:#f2a900;--ok:#127a43;--er:#b3261e;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151b;--card:#1b2029;--tx:#e8ebf0;--mu:#9aa3b2;--bd:#2c3340;--ac:#6ea0ff;--act:#0d1626;--hl:#f2b933;--ok:#4cc38a;--er:#ff8a80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12151b;--card:#1b2029;--tx:#e8ebf0;--mu:#9aa3b2;--bd:#2c3340;--ac:#6ea0ff;--act:#0d1626;--hl:#f2b933;--ok:#4cc38a;--er:#ff8a80;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*:before,*:after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:16px}
+h1{font-size:1.4rem;margin:0 0 2px}h2{font-size:1.05rem;margin:0 0 8px}
+.sub{color:var(--mu);margin:0 0 14px}
+.tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.tab{flex:1;min-width:200px;padding:10px 14px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;cursor:pointer;text-align:left;font:inherit}
+.tab small{display:block;color:var(--mu)}
+.tab.on{border-color:var(--ac);box-shadow:0 0 0 2px var(--ac) inset}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+input,textarea{padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit;min-width:0}
+input{width:120px}input.w{width:160px}
+textarea{width:100%;height:90px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace}
+button.b{padding:8px 12px;border:1px solid var(--ac);background:var(--ac);color:var(--act);border-radius:8px;cursor:pointer;font:inherit}
+button.b.s{background:transparent;color:var(--ac)}
+button.b.d{background:transparent;border-color:var(--er);color:var(--er)}
+.out{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px;margin-top:8px;overflow-x:auto;min-height:40px;font-size:14px}
+.out table{border-collapse:collapse;width:100%}.out th,.out td{padding:4px 8px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
+.msg{margin:6px 0;font-size:14px}.msg.ok{color:var(--ok)}.msg.er{color:var(--er)}
+.tree{overflow-x:auto;border:1px solid var(--bd);border-radius:8px;background:var(--bg)}
+.tree text{fill:var(--tx);font:11px system-ui,sans-serif}
+.tree line{stroke:var(--mu);stroke-width:1.2}
+.tree circle{fill:var(--card);stroke:var(--ac);stroke-width:1.6}
+.tree circle.h{fill:var(--hl);stroke:var(--hl)}.tree circle.h+text{fill:#000}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.stat{border:1px solid var(--bd);border-radius:8px;padding:8px}.stat b{display:block;font-size:1.2rem}.stat span{color:var(--mu);font-size:12px}
+select{padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Corporate Employee Directory</h1>
+<p class="sub">A Binary Search Tree keyed by employee ID. Both modules work on the same live tree.</p>
+
+<div class="tabs">
+<button class="tab on" id="t1" onclick="show(1)"><b>Module 1 · Directory Operations</b><small>Insert, search, delete, traversal reports, save and rebuild</small></button>
+<button class="tab" id="t2" onclick="show(2)"><b>Module 2 · Tree Analysis</b><small>Level-order, metrics, range queries, random vs sorted</small></button>
+<button class="tab" id="t3" onclick="show(3)"><b>Module 3 · Balance Lab and HR Tools</b><small>BST vs AVL, rebalancing, raises, salary bands, CSV export</small></button>
+</div>
+
+<div class="card"><h2>Tree view <span id="cnt" style="font-weight:400;color:var(--mu)"></span></h2><div class="tree" id="tree"></div></div>
+
+<section id="m1">
+<div class="card"><h2>Insert employee</h2>
+<div class="row"><input id="eid" type="number" placeholder="ID"><input class="w" id="enm" placeholder="Name"><input class="w" id="edp" placeholder="Department"><input id="esl" type="number" placeholder="Salary">
+<button class="b" onclick="doInsert()">Insert</button><button class="b s" onclick="doUpdate()">Update by ID</button><button class="b s" onclick="undo()">Undo</button></div>
+<div id="m1msg" class="msg"></div></div>
+
+<div class="card"><h2>Search and delete</h2>
+<div class="row"><input id="sid" type="number" placeholder="ID"><button class="b s" onclick="doSearch()">Search</button><button class="b d" onclick="doDelete()">Delete by ID</button>
+<input class="w" id="ddp" placeholder="Department"><button class="b d" onclick="doDelDept()">Delete department (postorder)</button></div>
+<p class="sub" style="margin:0">Delete handles a leaf, a node with one child, and a node with two children (replaced by its inorder successor).</p></div>
+
+<div class="card"><h2>Search and filter</h2><div class="row"><input class="w" id="fq" placeholder="Name, department or ID"><select id="fs"><option value="id">Sort by ID</option><option value="name">Sort by name</option><option value="sal">Sort by salary</option></select><button class="b" onclick="doFilter()">Apply</button></div><p class="sub" style="margin:0">Searching by ID is O(log n) on average. Text and salary searches need a full inorder scan, O(n).</p><div class="out" id="fout"></div></div>
+<div class="card"><h2>Bulk import and demo data</h2><textarea id="imp" placeholder="One employee per line: id,name,department,salary"></textarea><div class="row" style="margin-top:8px"><button class="b" onclick="doImport()">Import lines</button><button class="b s" onclick="doGen()">Add 20 random employees</button></div><div id="impmsg" class="msg"></div></div>
+<div class="card"><h2>Traversal reports</h2>
+<div class="row"><button class="b" onclick="report('in')">Inorder (sorted report)</button><button class="b s" onclick="report('pre')">Preorder</button><button class="b s" onclick="report('post')">Postorder</button></div>
+<div class="out" id="rep">Choose a traversal to generate a report.</div></div>
+
+<div class="card"><h2>Save and rebuild (preorder)</h2>
+<div class="row"><button class="b" onclick="doSave()">Save tree as preorder text</button><button class="b s" onclick="doRebuild()">Rebuild tree from text</button><button class="b d" onclick="doFree()">Free tree (postorder)</button></div>
+<textarea id="sav" placeholder="Preorder data appears here. Edit or paste it, then rebuild."></textarea>
+<div id="savmsg" class="msg"></div></div>
+<div class="card"><h2>Activity log</h2><p class="sub" style="margin:0">Every change is saved to the server (data.json) and shared by everyone who opens the app.</p><div class="out" id="log" style="max-height:150px;overflow:auto"></div></div>
+</section>
+
+<section id="m2" class="hide">
+<div class="card"><h2>Level-order traversal (queue based)</h2>
+<div class="row"><button class="b" onclick="doLevel()">Print level by level</button></div><div class="out" id="lvl"></div></div>
+
+<div class="card"><h2>Tree metrics</h2><div class="stats" id="stats"></div>
+<div class="row" style="margin-top:10px"><input id="nid" type="number" placeholder="ID"><button class="b s" onclick="doNode()">Depth, successor, predecessor</button></div>
+<div class="out" id="nodeout">Enter an ID to inspect it. The node is highlighted in the tree.</div></div>
+
+<div class="card"><h2>Traversal animation</h2><div class="row"><button class="b" onclick="playTrav('in')">Inorder</button><button class="b s" onclick="playTrav('pre')">Preorder</button><button class="b s" onclick="playTrav('post')">Postorder</button><button class="b s" onclick="playTrav('lvl')">Level-order</button></div><div class="out" id="anim">Press a button to watch the visit order in the tree above.</div></div>
+<div class="card"><h2>Ancestor and ranking queries</h2><div class="row"><input id="la" type="number" placeholder="ID 1"><input id="lb" type="number" placeholder="ID 2"><button class="b s" onclick="doLca()">Lowest common ancestor</button></div><div class="row"><input id="kk" type="number" placeholder="k"><button class="b s" onclick="doKth()">kth smallest ID</button><button class="b s" onclick="doTop()">Top k salaries</button></div><div class="out" id="lcaout"></div></div>
+<div class="card"><h2>Department analytics</h2><div class="out" id="deptout"></div></div>
+<div class="card"><h2>Range query</h2>
+<div class="row"><input id="lo" type="number" placeholder="Low ID"><input id="hi" type="number" placeholder="High ID"><button class="b" onclick="doRange()">Find IDs in range</button></div>
+<div class="out" id="rng"></div></div>
+
+<div class="card"><h2>Random vs sorted insertion</h2>
+<div class="row"><input id="bn" type="number" value="1000" min="10" max="5000"><button class="b" onclick="doBench()">Run comparison</button></div>
+<p class="sub" style="margin:0">Builds two separate trees from the same IDs (up to 5,000). Your directory is not changed.</p>
+<div class="out" id="bench"></div></div>
+</section>
+
+<section id="m3" class="hide">
+<div class="card"><h2>Balanced tree lab (BST vs AVL)</h2>
+<p class="sub" style="margin:0 0 8px">An AVL tree rotates after inserts to keep its height near log&#8322;(n). Compare it with your plain BST, or rebalance your directory.</p>
+<div class="row"><button class="b" onclick="doCmp()">Compare with my directory</button><input id="cid" type="number" placeholder="Search ID (optional)"></div>
+<div class="row"><input id="ln" type="number" value="2000" min="10" max="5000"><button class="b s" onclick="doLab()">Stress test with sorted IDs</button><button class="b s" onclick="doBalance()">Rebalance my directory</button></div>
+<div id="m3msg" class="msg"></div><div class="out" id="lab">Results appear here.</div></div>
+<div class="card"><h2>HR tools</h2>
+<div class="row"><input class="w" id="rd" placeholder="Department"><input id="rp" type="number" placeholder="Raise %"><button class="b" onclick="doRaise()">Apply raise</button></div>
+<div class="row"><button class="b s" onclick="doBands()">Salary bands</button><button class="b s" onclick="doCsv()">Export as CSV text</button></div>
+<div class="out" id="hr">Salary bands and CSV output appear here.</div></div>
+</section>
+</div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const money=n=>Number(n).toLocaleString("en-IN");
+class N{constructor(id,name,dept,sal){this.id=id;this.name=name;this.dept=dept;this.sal=sal;this.l=null;this.r=null}}
+let root=null,hl=null;
+
+// ---- BST core ----
+function insert(e,r0){let n=new N(e.id,e.name,e.dept,e.sal);if(!r0.root){r0.root=n;return true}
+ let c=r0.root;for(;;){if(e.id===c.id)return false;if(e.id<c.id){if(!c.l){c.l=n;return true}c=c.l}else{if(!c.r){c.r=n;return true}c=c.r}}}
+function search(id){let c=root,steps=0;while(c){steps++;if(id===c.id)return{n:c,steps};c=id<c.id?c.l:c.r}return{n:null,steps}}
+function minNode(n){while(n&&n.l)n=n.l;return n}
+function maxNode(n){while(n&&n.r)n=n.r;return n}
+function del(n,id){if(!n)return null;
+ if(id<n.id)n.l=del(n.l,id);else if(id>n.id)n.r=del(n.r,id);
+ else{if(!n.l)return n.r;if(!n.r)return n.l;
+  const s=minNode(n.r);n.id=s.id;n.name=s.name;n.dept=s.dept;n.sal=s.sal;n.r=del(n.r,s.id)}
+ return n}
+function trav(kind,n=root,out=[]){if(!n)return out;
+ if(kind==="pre")out.push(n);trav(kind,n.l,out);if(kind==="in")out.push(n);trav(kind,n.r,out);if(kind==="post")out.push(n);return out}
+function height(n){return n?1+Math.max(height(n.l),height(n.r)):0} // in nodes; empty = 0
+function leaves(n){return !n?0:(!n.l&&!n.r)?1:leaves(n.l)+leaves(n.r)}
+function depthOf(id){let c=root,d=0;while(c){if(id===c.id)return d;c=id<c.id?c.l:c.r;d++}return -1}
+function successor(id){let c=root,s=null;while(c){if(id<c.id){s=c;c=c.l}else c=c.r}return s}
+function predecessor(id){let c=root,p=null;while(c){if(id>c.id){p=c;c=c.r}else c=c.l}return p}
+function levelOrder(){const lv=[];if(!root)return lv;let q=[root];
+ while(q.length){const nx=[];lv.push(q.map(n=>n));for(const n of q){if(n.l)nx.push(n.l);if(n.r)nx.push(n.r)}q=nx}return lv}
+function range(n,lo,hi,out=[]){if(!n)return out;if(lo<n.id)range(n.l,lo,hi,out);if(n.id>=lo&&n.id<=hi)out.push(n);if(hi>n.id)range(n.r,lo,hi,out);return out}
+const wrap=()=>({get root(){return root},set root(v){root=v}});
+const ins=e=>insert(e,wrap());
+
+// ---- rendering ----
+function drawTree(){
+ const nodes=trav("in");$("cnt").textContent="· "+nodes.length+" employees";
+ if(!root){$("tree").innerHTML='<p style="padding:12px;margin:0;color:var(--mu)">The directory is empty.</p>';return}
+ if(nodes.length>63){$("tree").innerHTML='<p style="padding:12px;margin:0;color:var(--mu)">Tree has '+nodes.length+' nodes, too many to draw. Height is '+height(root)+'. Use the reports and metrics instead.</p>';return}
+ const pos=new Map();nodes.forEach((n,i)=>pos.set(n,i));const X=44,Y=56;let lines="",circ="",maxd=0;
+ (function walk(n,d){if(!n)return;maxd=Math.max(maxd,d);const x=pos.get(n)*X+30,y=d*Y+28;
+  for(const c of [n.l,n.r])if(c)lines+=`<line x1="${x}" y1="${y}" x2="${pos.get(c)*X+30}" y2="${(d+1)*Y+28}"/>`;
+  walk(n.l,d+1);walk(n.r,d+1);
+  circ+=`<g><title>${esc(n.name)} · ${esc(n.dept)}</title><circle class="${n.id===hl?"h":""}" cx="${x}" cy="${y}" r="17"/><text x="${x}" y="${y+4}" text-anchor="middle">${n.id}</text></g>`})(root,0);
+ const w=nodes.length*X+20,h=(maxd+1)*Y+10;
+ $("tree").innerHTML=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Binary search tree">${lines}${circ}</svg>`}
+function table(list){if(!list.length)return"<i>No records.</i>";
+ return"<table><tr><th>#</th><th>ID</th><th>Name</th><th>Department</th><th>Salary</th></tr>"+list.map((n,i)=>`<tr><td>${i+1}</td><td>${n.id}</td><td>${esc(n.name)}</td><td>${esc(n.dept)}</td><td>${money(n.sal)}</td></tr>`).join("")+"</table>"}
+function say(id,t,ok){const e=$(id);e.textContent=t;e.className="msg "+(ok?"ok":"er");if(/msg$/.test(id))log(t)}
+const hist=[];let skip=false;
+const ser=()=>JSON.stringify(trav("pre").map(n=>[n.id,n.name,n.dept,n.sal]));
+function log(t){const e=$("log");if(e)e.innerHTML=`<div>${new Date().toLocaleTimeString()} · ${esc(t)}</div>`+e.innerHTML}
+function refresh(){drawTree();stats();deptChart();const s=ser();if(!skip&&hist[hist.length-1]!==s)hist.push(s);if(hist.length>50)hist.shift();fetch("/api/employees",{method:"PUT",headers:{"Content-Type":"application/json"},body:s}).catch(()=>{})}
+function load(s){root=null;JSON.parse(s).forEach(([id,name,dept,sal])=>ins({id,name,dept,sal}))}
+function undo(){if(hist.length<2)return say("m1msg","Nothing to undo.",false);hist.pop();skip=true;load(hist[hist.length-1]);hl=null;refresh();skip=false;say("m1msg","Undid the last change.",true)}
+function show(k){[1,2,3].forEach(i=>{$("m"+i).classList.toggle("hide",k!==i);$("t"+i).classList.toggle("on",k===i)});if(k===2)stats()}
+
+// ---- Module 1 ----
+function doInsert(){const id=parseInt($("eid").value),name=$("enm").value.trim(),dept=$("edp").value.trim(),sal=parseFloat($("esl").value);
+ if(isNaN(id)||!name||!dept||isNaN(sal))return say("m1msg","Fill in all four fields.",false);
+ if(!ins({id,name,dept,sal}))return say("m1msg","ID "+id+" already exists. IDs must be unique.",false);
+ hl=id;say("m1msg","Inserted "+name+" (ID "+id+").",true);["eid","enm","edp","esl"].forEach(i=>$(i).value="");refresh()}
+function doSearch(){const id=parseInt($("sid").value);if(isNaN(id))return say("m1msg","Enter an ID to search.",false);
+ const r=search(id);if(!r.n){hl=null;refresh();return say("m1msg","ID "+id+" not found after "+r.steps+" comparisons.",false)}
+ hl=id;refresh();say("m1msg",`Found: ${r.n.name}, ${r.n.dept}, salary ${money(r.n.sal)} (${r.steps} comparisons).`,true)}
+function doDelete(){const id=parseInt($("sid").value);if(isNaN(id))return say("m1msg","Enter an ID to delete.",false);
+ const n=search(id).n;if(!n)return say("m1msg","ID "+id+" not found.",false);
+ const kind=!n.l&&!n.r?"leaf":(n.l&&n.r)?"two children":"one child";
+ root=del(root,id);hl=null;refresh();say("m1msg","Deleted ID "+id+" (case: "+kind+").",true)}
+function doDelDept(){const d=$("ddp").value.trim().toLowerCase();if(!d)return say("m1msg","Enter a department.",false);
+ const ids=trav("post").filter(n=>n.dept.toLowerCase()===d).map(n=>n.id);
+ if(!ids.length)return say("m1msg","No employees in that department.",false);
+ ids.forEach(i=>root=del(root,i));hl=null;refresh();say("m1msg","Removed "+ids.length+" employee(s) from "+$("ddp").value.trim()+" in postorder.",true)}
+function report(k){const names={in:"Inorder (sorted by ID)",pre:"Preorder (root, left, right)",post:"Postorder (left, right, root)"};
+ const l=trav(k);$("rep").innerHTML="<b>"+names[k]+"</b>"+table(l)+(l.length?"<p class='msg'>Total payroll: "+money(l.reduce((s,n)=>s+n.sal,0))+"</p>":"")}
+function doSave(){$("sav").value=trav("pre").map(n=>JSON.stringify([n.id,n.name,n.dept,n.sal])).join("\n");say("savmsg","Saved "+trav("pre").length+" nodes in preorder. Inserting them in this order recreates the exact same shape.",true)}
+function doRebuild(){try{const rows=$("sav").value.split("\n").filter(s=>s.trim()).map(s=>JSON.parse(s));
+ if(!rows.length)return say("savmsg","Nothing to rebuild from.",false);
+ const old=root;root=null;let bad=0;
+ for(const r of rows){if(!Array.isArray(r)||r.length!==4||typeof r[0]!=="number"){bad++;continue}ins({id:r[0],name:r[1],dept:r[2],sal:r[3]})}
+ hl=null;refresh();say("savmsg","Rebuilt "+trav("in").length+" nodes, height "+height(root)+(bad?", skipped "+bad+" invalid line(s)":"")+".",true)}
+ catch(e){say("savmsg","Could not read the data. Each line must be a JSON array [id,name,dept,salary].",false)}}
+function doFree(){const c=trav("post").length;root=null;hl=null;refresh();say("savmsg","Freed "+c+" nodes in postorder (children before parents).",true)}
+
+// ---- Module 2 ----
+function stats(){if(!$("stats"))return;const n=trav("in"),mn=minNode(root),mx=maxNode(root);
+ const items=[["Nodes",n.length],["Height (levels)",height(root)],["Leaves",leaves(root)],["Min ID",mn?mn.id:"–"],["Max ID",mx?mx.id:"–"],["Ideal height",n.length?Math.floor(Math.log2(n.length))+1:0]];
+ $("stats").innerHTML=items.map(([a,b])=>`<div class="stat"><b>${b}</b><span>${a}</span></div>`).join("")}
+function doLevel(){const lv=levelOrder();if(!lv.length){$("lvl").innerHTML="<i>The directory is empty.</i>";return}
+ $("lvl").innerHTML=lv.map((l,i)=>`<div><b>Level ${i}:</b> ${l.map(n=>n.id).join(" , ")}</div>`).join("")}
+function doNode(){const id=parseInt($("nid").value);if(isNaN(id)){$("nodeout").textContent="Enter an ID.";return}
+ const d=depthOf(id);if(d<0){hl=null;drawTree();$("nodeout").innerHTML="<span class='msg er'>ID "+id+" is not in the tree.</span>";return}
+ const s=successor(id),p=predecessor(id),n=search(id).n;hl=id;drawTree();
+ $("nodeout").innerHTML=`<b>${esc(n.name)}</b> (${esc(n.dept)})<br>Depth: ${d} (root is 0) · Subtree height: ${height(n)}<br>Inorder predecessor: ${p?p.id+" ("+esc(p.name)+")":"none"}<br>Inorder successor: ${s?s.id+" ("+esc(s.name)+")":"none"}`}
+function doRange(){const lo=parseInt($("lo").value),hi=parseInt($("hi").value);if(isNaN(lo)||isNaN(hi)||lo>hi){$("rng").innerHTML="<span class='msg er'>Enter a valid low and high ID (low ≤ high).</span>";return}
+ const r=range(root,lo,hi);$("rng").innerHTML=`<b>${r.length} employee(s) with ID from ${lo} to ${hi}</b>`+table(r)}
+function doBench(){let n=parseInt($("bn").value);if(isNaN(n)||n<10)n=10;if(n>5000)n=5000;$("bn").value=n;
+ const ids=Array.from({length:n},(_,i)=>(i+1)*10),rnd=ids.slice();
+ for(let i=n-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[rnd[i],rnd[j]]=[rnd[j],rnd[i]]}
+ const build=a=>{const t={root:null};a.forEach(id=>insert({id,name:"",dept:"",sal:0},t));return t.root};
+ const avg=r=>{let s=0;(function w(x,d){if(!x)return;s+=d;w(x.l,d+1);w(x.r,d+1)})(r,1);return s/n};
+ const rows=[["Random order",build(rnd)],["Sorted ascending",build(ids)],["Sorted descending",build(ids.slice().reverse())]];
+ const ideal=Math.floor(Math.log2(n))+1;
+ $("bench").innerHTML=`<table><tr><th>Insertion order</th><th>Height</th><th>Avg. comparisons per search</th><th>Shape</th></tr>`+
+ rows.map(([k,r])=>{const h=height(r);return`<tr><td>${k}</td><td>${h}</td><td>${avg(r).toFixed(1)}</td><td>${h>n/2?"Degenerate (linked list)":h<=ideal*2?"Reasonably balanced":"Skewed"}</td></tr>`}).join("")+
+ `</table><p class="msg">For ${n} nodes the best possible height is ${ideal}. Sorted input makes every new ID go to the same side, so the tree becomes a chain and searches degrade from O(log n) to O(n).</p>`}
+
+// ---- extra features ----
+function doUpdate(){const id=parseInt($("eid").value),n=search(id).n;if(!n)return say("m1msg","Enter the ID of an existing employee. Blank fields keep their old values.",false);
+ const nm=$("enm").value.trim(),dp=$("edp").value.trim(),sl=parseFloat($("esl").value);if(nm)n.name=nm;if(dp)n.dept=dp;if(!isNaN(sl))n.sal=sl;hl=id;refresh();say("m1msg","Updated ID "+id+".",true)}
+function doFilter(){const q=$("fq").value.trim().toLowerCase(),s=$("fs").value;let l=trav("in").filter(n=>!q||(n.name+" "+n.dept+" "+n.id).toLowerCase().includes(q));
+ if(s==="name")l.sort((a,b)=>a.name.localeCompare(b.name));if(s==="sal")l.sort((a,b)=>b.sal-a.sal);$("fout").innerHTML=table(l)}
+function doImport(){let ok=0,dup=0,bad=0;$("imp").value.split("\n").forEach(l=>{if(!l.trim())return;const p=l.split(",").map(s=>s.trim()),id=parseInt(p[0]),sl=parseFloat(p[3]);
+ if(p.length<4||isNaN(id)||isNaN(sl)||!p[1]||!p[2]){bad++;return}ins({id,name:p[1],dept:p[2],sal:sl})?ok++:dup++});refresh();say("impmsg",`Imported ${ok}, skipped ${dup} duplicate ID(s) and ${bad} invalid line(s).`,ok>0)}
+function doGen(){const D=["Engineering","Finance","HR","Sales","Operations"],F=["Aarav","Diya","Ishaan","Kavya","Rohan","Sneha","Tarun","Uma","Varun","Zoya"],L=["Sharma","Reddy","Nair","Khan","Das","Iyer","Gupta","Menon"],r=a=>a[Math.random()*a.length|0];let c=0;
+ for(let i=0;i<20;i++)if(ins({id:1000+Math.floor(Math.random()*9000),name:r(F)+" "+r(L),dept:r(D),sal:40000+(Math.random()*80|0)*1000}))c++;refresh();say("impmsg","Added "+c+" random employees.",true)}
+let tm=null;
+function playTrav(k){clearInterval(tm);const seq=k==="lvl"?levelOrder().flat():trav(k);if(!seq.length){$("anim").textContent="The directory is empty.";return}let i=0;
+ tm=setInterval(()=>{if(i>=seq.length){clearInterval(tm);hl=null;drawTree();return}hl=seq[i].id;drawTree();$("anim").innerHTML="<b>Visit order:</b> "+seq.slice(0,++i).map(n=>n.id).join(" → ")},600)}
+function doLca(){const a=parseInt($("la").value),b=parseInt($("lb").value);if(!search(a).n||!search(b).n){$("lcaout").innerHTML="<span class='msg er'>Both IDs must exist in the tree.</span>";return}
+ let c=root;while(c){if(a<c.id&&b<c.id)c=c.l;else if(a>c.id&&b>c.id)c=c.r;else break}hl=c.id;drawTree();$("lcaout").innerHTML=`Lowest common ancestor: <b>${c.id}</b> (${esc(c.name)}), the first node where the paths to ${a} and ${b} split.`}
+function doKth(){const k=parseInt($("kk").value),l=trav("in");if(isNaN(k)||k<1||k>l.length){$("lcaout").innerHTML="<span class='msg er'>k must be between 1 and "+l.length+".</span>";return}
+ const n=l[k-1];hl=n.id;drawTree();$("lcaout").innerHTML=`The ${k}th smallest ID is <b>${n.id}</b> (${esc(n.name)}), found at position ${k} of the inorder sequence.`}
+function doTop(){const k=parseInt($("kk").value)||3,l=trav("in").sort((a,b)=>b.sal-a.sal).slice(0,k);$("lcaout").innerHTML="<b>Top "+l.length+" salaries</b>"+table(l)}
+function deptChart(){const e=$("deptout");if(!e)return;const m={};trav("in").forEach(n=>{const d=m[n.dept]||(m[n.dept]={c:0,t:0,mn:1e12,mx:0});d.c++;d.t+=n.sal;d.mn=Math.min(d.mn,n.sal);d.mx=Math.max(d.mx,n.sal)});
+ const k=Object.keys(m).sort();if(!k.length){e.innerHTML="<i>No data.</i>";return}const top=Math.max(...k.map(x=>m[x].t/m[x].c));
+ e.innerHTML="<table><tr><th>Department</th><th>Staff</th><th>Total</th><th>Average</th><th>Min</th><th>Max</th></tr>"+k.map(x=>{const d=m[x];return`<tr><td>${esc(x)}</td><td>${d.c}</td><td>${money(d.t)}</td><td>${money(Math.round(d.t/d.c))}</td><td>${money(d.mn)}</td><td>${money(d.mx)}</td></tr>`}).join("")+"</table><p class='msg'>Average salary by department</p>"+
+ k.map(x=>{const a=m[x].t/m[x].c;return`<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="width:110px">${esc(x)}</span><div style="flex:1;background:var(--card);border-radius:4px"><div style="width:${a/top*100}%;background:var(--ac);height:14px;border-radius:4px"></div></div><span>${money(Math.round(a))}</span></div>`}).join("")}
+
+// ---- Module 3 ----
+function avlBuild(ids){let rot=0;const h=n=>n?n.h:0,up=n=>{n.h=1+Math.max(h(n.l),h(n.r))},
+ rr=y=>{const x=y.l;y.l=x.r;x.r=y;up(y);up(x);rot++;return x},rl=x=>{const y=x.r;x.r=y.l;y.l=x;up(x);up(y);rot++;return y};
+ const add=(n,id)=>{if(!n)return{id,l:null,r:null,h:1};if(id<n.id)n.l=add(n.l,id);else if(id>n.id)n.r=add(n.r,id);else return n;up(n);const b=h(n.l)-h(n.r);
+  if(b>1){if(id>n.l.id)n.l=rl(n.l);return rr(n)}if(b<-1){if(id<n.r.id)n.r=rr(n.r);return rl(n)}return n};
+ let r=null;ids.forEach(id=>r=add(r,id));return{root:r,rot,height:h(r)}}
+const avgd=(r,n)=>{let s=0;(function w(x,d){if(!x)return;s+=d;w(x.l,d+1);w(x.r,d+1)})(r,1);return s/n};
+const avlSteps=(r,id)=>{let c=r,s=0;while(c){s++;if(id===c.id)return s;c=id<c.id?c.l:c.r}return s};
+function doCmp(){const ids=trav("pre").map(n=>n.id),n=ids.length;if(n<2)return say("m3msg","Add at least 2 employees first.",false);
+ const a=avlBuild(ids),q=parseInt($("cid").value),ideal=Math.floor(Math.log2(n))+1,hasQ=!isNaN(q)&&search(q).n;
+ $("lab").innerHTML=`<table><tr><th>Tree (${n} keys)</th><th>Height</th><th>Avg. comparisons</th><th>Rotations</th>${hasQ?`<th>Steps for ID ${q}</th>`:""}</tr>
+ <tr><td>Your BST</td><td>${height(root)}</td><td>${avgd(root,n).toFixed(2)}</td><td>0</td>${hasQ?`<td>${search(q).steps}</td>`:""}</tr>
+ <tr><td>Same keys in AVL</td><td>${a.height}</td><td>${avgd(a.root,n).toFixed(2)}</td><td>${a.rot}</td>${hasQ?`<td>${avlSteps(a.root,q)}</td>`:""}</tr>
+ <tr><td>Theoretical best</td><td>${ideal}</td><td>${(Array.from({length:n},(_,i)=>Math.floor(Math.log2(i+1))+1).reduce((x,y)=>x+y,0)/n).toFixed(2)}</td><td>–</td>${hasQ?"<td>–</td>":""}</tr></table>
+ <p class="msg">AVL height never exceeds about 1.44 log&#8322;(n). ${height(root)>a.height?"Your BST is "+(height(root)-a.height)+" level(s) taller than AVL for the same keys.":"Your BST is already as short as AVL for these keys."}</p>`;say("m3msg","Comparison done.",true)}
+function doLab(){let n=parseInt($("ln").value);if(isNaN(n)||n<10)n=10;if(n>5000)n=5000;$("ln").value=n;
+ const ids=Array.from({length:n},(_,i)=>(i+1)*10),t={root:null},T=()=>performance.now();
+ let t0=T();ids.forEach(id=>insert({id,name:"",dept:"",sal:0},t));const bb=T()-t0;
+ t0=T();const a=avlBuild(ids);const ab=T()-t0;
+ const find=(f)=>{const s=T();ids.forEach(f);return T()-s};
+ const bs=find(id=>{let c=t.root;while(c&&c.id!==id)c=id<c.id?c.l:c.r}),as=find(id=>avlSteps(a.root,id));
+ $("lab").innerHTML=`<table><tr><th>Sorted insert of ${n} IDs</th><th>Height</th><th>Avg. comparisons</th><th>Rotations</th><th>Build (ms)</th><th>Search all (ms)</th></tr>
+ <tr><td>Plain BST</td><td>${height(t.root)}</td><td>${avgd(t.root,n).toFixed(1)}</td><td>0</td><td>${bb.toFixed(1)}</td><td>${bs.toFixed(1)}</td></tr>
+ <tr><td>AVL tree</td><td>${a.height}</td><td>${avgd(a.root,n).toFixed(1)}</td><td>${a.rot}</td><td>${ab.toFixed(1)}</td><td>${as.toFixed(1)}</td></tr></table>
+ <p class="msg">Sorted input makes the plain BST a chain of height ${n}. AVL pays ${a.rot} rotations once and keeps every search near log&#8322;(${n}) &asymp; ${Math.log2(n).toFixed(1)} steps. Timings vary by device.</p>`;say("m3msg","Stress test done.",true)}
+function doBalance(){const l=trav("in");if(l.length<3)return say("m3msg","Need at least 3 employees.",false);
+ const b=(i,j)=>{if(i>j)return null;const m=(i+j)>>1,x=l[m],n=new N(x.id,x.name,x.dept,x.sal);n.l=b(i,m-1);n.r=b(m+1,j);return n};
+ const before=height(root);root=b(0,l.length-1);hl=null;refresh();say("m3msg",`Rebuilt as a perfectly balanced BST: height ${before} to ${height(root)}. Use Undo in Module 1 to go back.`,true)}
+function doRaise(){const d=$("rd").value.trim().toLowerCase(),p=parseFloat($("rp").value);if(!d||isNaN(p))return say("m3msg","Enter a department and a percentage.",false);
+ let c=0;trav("in").forEach(n=>{if(n.dept.toLowerCase()===d){n.sal=Math.round(n.sal*(1+p/100));c++}});
+ if(!c)return say("m3msg","No employees in that department.",false);refresh();say("m3msg",`Applied ${p}% to ${c} employee(s) in ${$("rd").value.trim()}.`,true)}
+function doBands(){const l=trav("in"),B=[["Below 50,000",0,5e4],["50,000 to 74,999",5e4,75e3],["75,000 to 99,999",75e3,1e5],["100,000 and above",1e5,1e18]];
+ if(!l.length){$("hr").innerHTML="<i>No data.</i>";return}
+ $("hr").innerHTML=B.map(([t,lo,hi])=>{const c=l.filter(n=>n.sal>=lo&&n.sal<hi).length;return`<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="width:150px">${t}</span><div style="flex:1;background:var(--card);border-radius:4px"><div style="width:${c/l.length*100}%;background:var(--ac);height:14px;border-radius:4px"></div></div><span>${c}</span></div>`}).join("")}
+function doCsv(){const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+ $("hr").innerHTML='<textarea readonly id="csvout">'+esc("id,name,department,salary\n"+trav("in").map(n=>[n.id,q(n.name),q(n.dept),n.sal].join(",")).join("\n"))+"</textarea><p class='msg'>Select all and copy. Paste into a spreadsheet or into Bulk import (Module 1).</p>";$("csvout").select()}
+
+// ---- sample data ----
+[[5040,"Anita Rao","Engineering",92000],[3020,"Rahul Mehta","Finance",68000],[7010,"Priya Nair","HR",61000],[2010,"Karthik S","Engineering",85000],
+ [4030,"Divya Menon","Finance",72000],[6050,"Arjun Das","Sales",58000],[8020,"Meera Iyer","Engineering",99000],[1500,"Sanjay Kumar","HR",54000],
+ [3500,"Nisha Patel","Sales",63000],[9030,"Vikram Singh","Finance",88000]].forEach(([id,name,dept,sal])=>ins({id,name,dept,sal}));
+fetch("/api/employees").then(r=>r.json()).then(d=>{if(d.saved)load(JSON.stringify(d.rows))}).catch(()=>{}).finally(()=>{refresh();log("Directory loaded from server.")});
+</script>
+</body>
+</html>
